@@ -22,6 +22,7 @@ async function loadScalerParams() {
 }
 
 // Завантаження моделі
+// Завантаження моделі
 async function loadModel() {
     try {
         console.log('Початок завантаження моделі...');
@@ -32,13 +33,8 @@ async function loadModel() {
             throw new Error('Не вдалося завантажити параметри нормалізації');
         }
 
-        // Завантажуємо модель TensorFlow.js
-        // model = await tf.loadLayersModel('./tfjs_model/model.json');
+        // Завантажуємо модель як граф (більш стійкий спосіб)
         model = await tf.loadGraphModel('./tfjs_model/model.json');
-
-        // Перевіряємо архітектуру моделі
-        console.log('Архітектура моделі:');
-        model.summary();
 
         // Оновлюємо статус
         document.getElementById('model-status').textContent = 'Модель завантажена успішно!';
@@ -47,12 +43,12 @@ async function loadModel() {
 
         console.log('Модель завантажена успішно');
 
-        // Додаємо тестовий прогноз для перевірки
-        setTimeout(testPrediction, 1000);
-
     } catch (error) {
         console.error('Помилка завантаження моделі:', error);
         document.getElementById('model-status').textContent = 'Помилка завантаження моделі: ' + error.message;
+
+        // Додаткові відомості про помилку
+        console.log('Деталі помилки:', error);
     }
 }
 
@@ -101,8 +97,8 @@ async function predict() {
         const normalizedInput = normalizeInput(inputData);
         const inputTensor = tf.tensor2d([normalizedInput]);
 
-        // Прогнозування
-        const predictionTensor = model.predict(inputTensor);
+        // Прогнозування (для GraphModel використовуємо execute замість predict)
+        const predictionTensor = model.execute(inputTensor);
         const predictionData = await predictionTensor.dataSync();
 
         // Денормалізація результатів
