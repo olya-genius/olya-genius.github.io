@@ -33,7 +33,8 @@ async function loadModel() {
         }
 
         // Завантажуємо модель TensorFlow.js
-        model = await tf.loadLayersModel('./tfjs_model/model.json');
+        // model = await tf.loadLayersModel('./tfjs_model/model.json');
+        model = await tf.loadGraphModel('./tfjs_model/model.json');
 
         // Перевіряємо архітектуру моделі
         console.log('Архітектура моделі:');
