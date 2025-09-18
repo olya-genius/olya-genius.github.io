@@ -20,7 +20,7 @@ async function loadModel() {
         await loadScalerParams();
 
         // Завантаження моделі TensorFlow.js
-        model = await tf.loadLayersModel('tfjs_model/model.json');
+        model = await tf.loadLayersModel('./tfjs_model/model.json');
 
         document.getElementById('model-status').textContent = 'Модель завантажена!';
         document.getElementById('predict-btn').disabled = false;
