@@ -1,0 +1,4 @@
+﻿include:
+  - tfjs_model/
+  - tfjs_model/*.json
+  - tfjs_model/*.bin
