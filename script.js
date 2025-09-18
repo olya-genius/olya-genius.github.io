@@ -19,8 +19,16 @@ async function loadScalerParams() {
 async function loadModel() {
     try {
         await loadScalerParams();
-        model = await tf.loadLayersModel('./tfjs_model/model.json'); // Добавлено ./
-        // ... остальной код без изменений
+
+        // Явно определяем входную форму для модели
+        model = await tf.loadLayersModel('./tfjs_model/model.json');
+
+        // Проверяем архитектуру модели
+        console.log(model.summary());
+
+        document.getElementById('model-status').textContent = 'Модель завантажена!';
+        document.getElementById('predict-btn').disabled = false;
+        console.log('Модель успішно завантажена');
     } catch (error) {
         console.error('Помилка завантаження моделі:', error);
         document.getElementById('model-status').textContent = 'Помилка завантаження моделі: ' + error.message;
