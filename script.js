@@ -1,108 +1,55 @@
 // Глобальні змінні
 let model = null;
 let scalerParams = null;
-let modelLoaded = false;
 
 // Завантаження параметрів нормалізації
 async function loadScalerParams() {
     try {
-        console.log('Початок завантаження параметрів нормалізації...');
         const response = await fetch('./scaler_params.json');
-        if (!response.ok) {
-            throw new Error(`Помилка HTTP: ${response.status}`);
-        }
         scalerParams = await response.json();
-        console.log('Параметри нормалізації завантажені успішно');
-        return true;
+        console.log('Параметри нормалізації завантажені');
     } catch (error) {
         console.error('Помилка завантаження параметрів нормалізації:', error);
-        document.getElementById('model-status').textContent = 'Помилка завантаження параметрів нормалізації';
-        return false;
     }
 }
 
-// Завантаження моделі
 // Завантаження моделі
 async function loadModel() {
     try {
-        console.log('Початок завантаження моделі...');
-
-        // Завантажуємо параметри нормалізації
-        const paramsLoaded = await loadScalerParams();
-        if (!paramsLoaded) {
-            throw new Error('Не вдалося завантажити параметри нормалізації');
-        }
-
-        // Завантажуємо модель як граф (більш стійкий спосіб)
-        model = await tf.loadGraphModel('./tfjs_model/model.json');
-
-        // Оновлюємо статус
-        document.getElementById('model-status').textContent = 'Модель завантажена успішно!';
+        await loadScalerParams();
+        model = await tf.loadLayersModel('./tfjs_model/model.json');
+        document.getElementById('model-status').textContent = 'Модель завантажена!';
         document.getElementById('predict-btn').disabled = false;
-        modelLoaded = true;
-
-        console.log('Модель завантажена успішно');
-
+        console.log('Модель успішно завантажена');
     } catch (error) {
         console.error('Помилка завантаження моделі:', error);
-        document.getElementById('model-status').textContent = 'Помилка завантаження моделі: ' + error.message;
-
-        // Додаткові відомості про помилку
-        console.log('Деталі помилки:', error);
-    }
-}
-
-// Тестовий прогноз для перевірки роботи моделі
-async function testPrediction() {
-    if (!modelLoaded) return;
-
-    try {
-        console.log('Виконуємо тестовий прогноз...');
-        const testInput = [20, 5, 3, 2]; // тестові дані
-
-        // Нормалізація вхідних даних
-        const normalizedInput = normalizeInput(testInput);
-        const inputTensor = tf.tensor2d([normalizedInput]);
-
-        // Прогнозування
-        const predictionTensor = model.predict(inputTensor);
-        const predictionData = await predictionTensor.dataSync();
-
-        // Денормалізація результатів
-        const results = denormalizeOutput(Array.from(predictionData));
-
-        console.log('Тестовий прогноз успішний:', results);
-
-        // Очищення пам'яті
-        inputTensor.dispose();
-        predictionTensor.dispose();
-
-    } catch (error) {
-        console.error('Помилка тестового прогнозу:', error);
+        document.getElementById('model-status').textContent = 'Помилка завантаження моделі';
     }
 }
 
 // Функція прогнозування
 async function predict() {
-    if (!modelLoaded) {
+    if (!model) {
         alert('Модель ще не завантажена!');
         return;
     }
 
-    // Отримання вхідних даних (приклад)
     const inputData = [20, 5, 3, 2]; // температура, опади, вітер, сезон
 
     try {
         // Нормалізація вхідних даних
-        const normalizedInput = normalizeInput(inputData);
-        const inputTensor = tf.tensor2d([normalizedInput]);
+        const normalizedInput = inputData.map((val, i) =>
+            (val - scalerParams.X_mean[i]) / scalerParams.X_scale[i]
+        );
 
-        // Прогнозування (для GraphModel використовуємо execute замість predict)
-        const predictionTensor = model.execute(inputTensor);
+        const inputTensor = tf.tensor2d([normalizedInput]);
+        const predictionTensor = model.predict(inputTensor);
         const predictionData = await predictionTensor.dataSync();
 
         // Денормалізація результатів
-        const results = denormalizeOutput(Array.from(predictionData));
+        const results = Array.from(predictionData).map((val, i) =>
+            val * scalerParams.y_scale[i] + scalerParams.y_mean[i]
+        );
 
         // Відображення результатів
         document.getElementById('results').innerHTML = `
@@ -117,16 +64,13 @@ async function predict() {
         // Очищення пам'яті
         inputTensor.dispose();
         predictionTensor.dispose();
-
     } catch (error) {
         console.error('Помилка прогнозування:', error);
-        document.getElementById('results').innerHTML = `<p>Помилка прогнозування: ${error.message}</p>`;
     }
 }
 
 // Ініціалізація при завантаженні сторінки
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('Сторінка завантажена, початок ініціалізації...');
     loadModel();
     document.getElementById('predict-btn').addEventListener('click', predict);
 });
