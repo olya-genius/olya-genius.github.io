@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="uk">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ШІ-моніторинг річки Сейм</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="sound-alert">
+        Увімкнути звукові сповіщення
+    </div>
+
+    <header>
+        <h1>ШІ-моніторинг річки Сейм</h1>
+        <p class="subtitle">Інтелектуальна система аналізу стану річки та виявлення загроз</p>
+    </header>
+    <main>
+        <!-- Ваш інтерфейс тут -->
+        <div id="model-status">Завантаження моделі...</div>
+        <button id="predict-btn" disabled>Прогнозувати</button>
+        <div id="results"></div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
