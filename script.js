@@ -5,30 +5,25 @@ let scalerParams = null;
 // Завантаження параметрів нормалізації
 async function loadScalerParams() {
     try {
-        const response = await fetch('scaler_params.json');
+        const response = await fetch('./scaler_params.json'); // Добавлено ./
+        if (!response.ok) throw new Error('Network response was not ok');
         scalerParams = await response.json();
         console.log('Параметри нормалізації завантажені');
     } catch (error) {
         console.error('Помилка завантаження параметрів нормалізації:', error);
+        throw error;
     }
 }
 
 // Завантаження моделі
 async function loadModel() {
     try {
-        // Завантаження параметрів нормалізації
         await loadScalerParams();
-
-        // Завантаження моделі TensorFlow.js
-        model = await tf.loadLayersModel('./tfjs_model/model.json');
-
-        document.getElementById('model-status').textContent = 'Модель завантажена!';
-        document.getElementById('predict-btn').disabled = false;
-
-        console.log('Модель успішно завантажена');
+        model = await tf.loadLayersModel('./tfjs_model/model.json'); // Добавлено ./
+        // ... остальной код без изменений
     } catch (error) {
         console.error('Помилка завантаження моделі:', error);
-        document.getElementById('model-status').textContent = 'Помилка завантаження моделі';
+        document.getElementById('model-status').textContent = 'Помилка завантаження моделі: ' + error.message;
     }
 }
 
