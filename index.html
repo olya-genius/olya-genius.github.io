@@ -11,22 +11,20 @@
 </head>
 
 <body>
-    <div class="sound-alert">
-        Увімкнути звукові сповіщення
-    </div>
-
     <header>
         <h1>ШІ-моніторинг річки Сейм</h1>
         <p class="subtitle">Інтелектуальна система аналізу стану річки та виявлення загроз</p>
     </header>
     <main>
-        <!-- Ваш інтерфейс тут -->
-        <div id="model-status">Завантаження моделі...</div>
+        <div class="status-container">
+            <div id="model-status">Завантаження моделі...</div>
+            <div id="loading-spinner" class="spinner"></div>
+        </div>
         <button id="predict-btn" disabled>Прогнозувати</button>
         <div id="results"></div>
     </main>
 
-    <script src="https://your-username.github.io/your-repo/script.js"></script>
+    <script src="script.js"></script>
 </body>
 
 </html>
