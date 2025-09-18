@@ -1,136 +1,58 @@
-// Глобальні змінні
-let model = null;
-let scalerParams = null;
-let modelLoaded = false;
+let model;
+let scalerParams;
 
-// Завантаження параметрів нормалізації
-async function loadScalerParams() {
-    try {
-        console.log('Початок завантаження параметрів нормалізації...');
-        const response = await fetch('./scaler_params.json');
-        if (!response.ok) {
-            throw new Error(`Помилка HTTP: ${response.status}`);
-        }
-        scalerParams = await response.json();
-        console.log('Параметри нормалізації завантажені успішно');
-        return true;
-    } catch (error) {
-        console.error('Помилка завантаження параметрів нормалізації:', error);
-        document.getElementById('model-status').textContent = 'Помилка завантаження параметрів нормалізації';
-        return false;
-    }
-}
-
-// Завантаження моделі
+// Загрузка модели и параметров нормализации
 async function loadModel() {
     try {
-        console.log('Початок завантаження моделі...');
+        // Загружаем модель
+        model = await tf.loadLayersModel("tfjs_model/model.json");
 
-        // Завантажуємо параметри нормалізації
-        const paramsLoaded = await loadScalerParams();
-        if (!paramsLoaded) {
-            throw new Error('Не вдалося завантажити параметри нормалізації');
-        }
+        // Загружаем параметры нормализации
+        const resp = await fetch("scaler_params.json");
+        scalerParams = await resp.json();
 
-        // Завантажуємо модель TensorFlow.js
-        model = await tf.loadLayersModel('./tfjs_model/model.json');
-
-
-        // Перевіряємо архітектуру моделі
-        console.log('Архітектура моделі:');
-        model.summary();
-
-        // Оновлюємо статус
-        document.getElementById('model-status').textContent = 'Модель завантажена успішно!';
-        document.getElementById('predict-btn').disabled = false;
-        modelLoaded = true;
-
-        console.log('Модель завантажена успішно');
-
-        // Додаємо тестовий прогноз для перевірки
-        setTimeout(testPrediction, 1000);
-
-    } catch (error) {
-        console.error('Помилка завантаження моделі:', error);
-        document.getElementById('model-status').textContent = 'Помилка завантаження моделі: ' + error.message;
+        document.getElementById("model-status").innerText = "Модель завантажена!";
+        document.getElementById("predict-btn").disabled = false;
+    } catch (err) {
+        console.error("Помилка завантаження:", err);
+        document.getElementById("model-status").innerText = "Помилка завантаження моделі";
     }
 }
 
-// Тестовий прогноз для перевірки роботи моделі
-async function testPrediction() {
-    if (!modelLoaded) return;
-
-    try {
-        console.log('Виконуємо тестовий прогноз...');
-        const testInput = [20, 5, 3, 2]; // тестові дані
-
-        // Нормалізація вхідних даних
-        const normalizedInput = normalizeInput(testInput);
-        const inputTensor = tf.tensor2d([normalizedInput]);
-
-        // Прогнозування
-        const predictionTensor = model.predict(inputTensor);
-        const predictionData = await predictionTensor.dataSync();
-
-        // Денормалізація результатів
-        const results = denormalizeOutput(Array.from(predictionData));
-
-        console.log('Тестовий прогноз успішний:', results);
-
-        // Очищення пам'яті
-        inputTensor.dispose();
-        predictionTensor.dispose();
-
-    } catch (error) {
-        console.error('Помилка тестового прогнозу:', error);
-    }
+// Нормализация входа
+function normalizeInput(input) {
+    return input.map((v, i) => (v - scalerParams.X_mean[i]) / scalerParams.X_scale[i]);
 }
 
-// Функція прогнозування
+// Денормализация выхода
+function denormalizeOutput(output) {
+    return output.map((v, i) => v * scalerParams.y_scale[i] + scalerParams.y_mean[i]);
+}
+
+// Прогноз
 async function predict() {
-    if (!modelLoaded) {
-        alert('Модель ще не завантажена!');
-        return;
-    }
+    const input = [20, 5, 3, 2]; // пример: t=20, осадки=5, вітер=3, сезон=2
+    const normInput = normalizeInput(input);
+    const tensor = tf.tensor2d([normInput]);
 
-    // Отримання вхідних даних (приклад)
-    const inputData = [20, 5, 3, 2]; // температура, опади, вітер, сезон
+    const pred = model.predict(tensor);
+    const data = Array.from(await pred.data());
+    const result = denormalizeOutput(data);
 
-    try {
-        // Нормалізація вхідних даних
-        const normalizedInput = normalizeInput(inputData);
-        const inputTensor = tf.tensor2d([normalizedInput]);
+    document.getElementById("results").innerHTML = `
+        <p>Кисень: ${result[0].toFixed(2)} мг/л</p>
+        <p>pH: ${result[1].toFixed(2)}</p>
+        <p>Каламутність: ${result[2].toFixed(2)} NTU</p>
+        <p>Температура води: ${result[3].toFixed(2)} °C</p>
+        <p>Забруднювачі: ${result[4].toFixed(2)} ppm</p>
+    `;
 
-        // Прогнозування
-        const predictionTensor = model.predict(inputTensor);
-        const predictionData = await predictionTensor.dataSync();
-
-        // Денормалізація результатів
-        const results = denormalizeOutput(Array.from(predictionData));
-
-        // Відображення результатів
-        document.getElementById('results').innerHTML = `
-            <h3>Результати прогнозу:</h3>
-            <p>Кисень: ${results[0].toFixed(2)} мг/л</p>
-            <p>pH: ${results[1].toFixed(2)}</p>
-            <p>Каламутність: ${results[2].toFixed(2)} NTU</p>
-            <p>Температура води: ${results[3].toFixed(2)} °C</p>
-            <p>Забруднювачі: ${results[4].toFixed(2)} ppm</p>
-        `;
-
-        // Очищення пам'яті
-        inputTensor.dispose();
-        predictionTensor.dispose();
-
-    } catch (error) {
-        console.error('Помилка прогнозування:', error);
-        document.getElementById('results').innerHTML = `<p>Помилка прогнозування: ${error.message}</p>`;
-    }
+    tensor.dispose();
+    pred.dispose();
 }
 
-// Ініціалізація при завантаженні сторінки
-document.addEventListener('DOMContentLoaded', function () {
-    console.log('Сторінка завантажена, початок ініціалізації...');
+// Инициализация
+document.addEventListener("DOMContentLoaded", () => {
     loadModel();
-    document.getElementById('predict-btn').addEventListener('click', predict);
+    document.getElementById("predict-btn").addEventListener("click", predict);
 });
