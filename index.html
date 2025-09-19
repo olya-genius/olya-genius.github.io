@@ -11,18 +11,92 @@
 </head>
 
 <body>
-    <header>
-        <h1>ШІ-моніторинг річки Сейм</h1>
-        <p class="subtitle">Інтелектуальна система аналізу стану річки та виявлення загроз</p>
-    </header>
-    <main>
-        <div class="status-container">
-            <div id="model-status">Завантаження моделі...</div>
-            <div id="loading-spinner" class="spinner"></div>
+    <div class="container">
+        <header>
+            <h1>ШІ-моніторинг річки Сейм</h1>
+            <p class="subtitle">Реальна ШІ-модель прогнозування екологічного стану</p>
+        </header>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Статус моделі</h2>
+                <span id="model-status" class="model-status status-loading">Завантаження...</span>
+            </div>
+            <div id="model-info">
+                <p>Завантаження інформації про модель...</p>
+            </div>
         </div>
-        <button id="predict-btn" disabled>Прогнозувати</button>
-        <div id="results"></div>
-    </main>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Прогнозування стану річки</h2>
+            </div>
+
+            <div class="grid">
+                <div>
+                    <h3>Поточні значення</h3>
+                    <div class="parameter">
+                        <span>Температура повітря (°C):</span>
+                        <span id="current-air-temp">20.0</span>
+                    </div>
+                    <div class="parameter">
+                        <span>Опади (мм):</span>
+                        <span id="current-precipitation">5.0</span>
+                    </div>
+                    <div class="parameter">
+                        <span>Швидкість вітру (м/с):</span>
+                        <span id="current-wind-speed">3.0</span>
+                    </div>
+                    <div class="parameter">
+                        <span>Сезон:</span>
+                        <span id="current-season">Літо (2)</span>
+                    </div>
+                </div>
+
+                <div>
+                    <h3>Прогноз через 6 годин</h3>
+                    <div class="parameter" id="predict-oxygen">
+                        <span>Кисень (мг/л):</span>
+                        <span>--</span>
+                    </div>
+                    <div class="parameter" id="predict-ph">
+                        <span>pH:</span>
+                        <span>--</span>
+                    </div>
+                    <div class="parameter" id="predict-turbidity">
+                        <span>Каламутність (NTU):</span>
+                        <span>--</span>
+                    </div>
+                    <div class="parameter" id="predict-temperature">
+                        <span>Температура води (°C):</span>
+                        <span>--</span>
+                    </div>
+                    <div class="parameter" id="predict-pollutants">
+                        <span>Забруднювачі (ppm):</span>
+                        <span>--</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="predict-btn" class="btn" disabled>
+                    <span class="btn-icon">📈</span> Запустити прогнозування
+                </button>
+                <button id="simulate-btn" class="btn btn-warning">
+                    <span class="btn-icon">🔄</span> Оновити дані сенсорів
+                </button>
+            </div>
+
+            <div id="prediction-explanation">
+                <h4>Пояснення прогнозу:</h4>
+                <p>Після завантаження моделі з'явиться детальний аналіз.</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>Розширена система ШІ-моніторингу для захисту річки Сейм</p>
+        </footer>
+    </div>
 
     <script src="script.js"></script>
 </body>
